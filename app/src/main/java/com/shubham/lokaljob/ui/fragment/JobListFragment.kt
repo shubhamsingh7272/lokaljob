@@ -94,7 +94,8 @@ class JobListFragment : Fragment() {
 
     private fun updateEmptyState(isEmpty: Boolean) {
         Log.d("JobListFragment", "Empty state: $isEmpty")
-        binding.emptyTextView.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.emptyStateLayout.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.jobsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
     override fun onDestroyView() {

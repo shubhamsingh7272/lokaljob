@@ -49,6 +49,7 @@ class JobAdapter(
         fun bind(job: Job) {
             binding.apply {
                 titleTextView.text = job.title
+                companyTextView.text = job.company
                 locationTextView.text = job.primaryDetails.Place
                 salaryTextView.text = job.primaryDetails.Salary
                 phoneTextView.text = job.phone

@@ -5,8 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
-    app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:strokeColor="#E0E0E0"
+    app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -17,7 +19,10 @@
             android:id="@+id/titleTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="#333333"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toStartOf="@+id/bookmarkButton"
             app:layout_constraintStart_toStartOf="parent"
@@ -26,45 +31,83 @@
 
         <ImageButton
             android:id="@+id/bookmarkButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="8dp"
+            android:padding="12dp"
             android:src="@drawable/ic_bookmark_border"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="#FF9800" />
+
+        <TextView
+            android:id="@+id/companyTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#666666"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/titleTextView"
+            tools:text="Google Inc." />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="12dp"
+            android:background="#E0E0E0"
+            app:layout_constraintTop_toBottomOf="@+id/companyTextView" />
 
         <TextView
             android:id="@+id/locationTextView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:drawablePadding="4dp"
+            android:layout_marginTop="12dp"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:textColor="#666666"
+            android:textSize="14sp"
             app:drawableStartCompat="@drawable/ic_location"
+            app:drawableTint="#757575"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/titleTextView"
+            app:layout_constraintTop_toBottomOf="@+id/divider"
             tools:text="New York, NY" />
 
         <TextView
             android:id="@+id/salaryTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:drawablePadding="4dp"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:textColor="#4CAF50"
+            android:textSize="14sp"
+            android:textStyle="bold"
             app:drawableStartCompat="@drawable/ic_salary"
+            app:drawableTint="#4CAF50"
+            app:layout_constraintEnd_toStartOf="@+id/phoneTextView"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/locationTextView"
+            app:layout_constraintWidth_percent="0.5"
             tools:text="$80,000 - $120,000" />
 
         <TextView
             android:id="@+id/phoneTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:drawablePadding="4dp"
+            android:drawablePadding="8dp"
+            android:gravity="center_vertical"
+            android:textColor="#666666"
+            android:textSize="14sp"
             app:drawableStartCompat="@drawable/ic_phone"
+            app:drawableTint="#757575"
             app:layout_constraintBottom_toBottomOf="@+id/salaryTextView"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/salaryTextView"
             app:layout_constraintTop_toTopOf="@+id/salaryTextView"
             tools:text="+1 234 567 8900" />
