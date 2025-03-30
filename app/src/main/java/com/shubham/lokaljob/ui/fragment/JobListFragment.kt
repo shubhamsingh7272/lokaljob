@@ -7,8 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.shubham.lokaljob.databinding.FragmentJobListBinding
 import com.shubham.lokaljob.ui.adapter.JobAdapter
 import com.shubham.lokaljob.ui.viewmodel.JobViewModel
@@ -37,49 +41,91 @@ class JobListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupScrollListener()
         setupObservers()
         setupSwipeRefresh()
+        viewModel.loadJobs()
     }
 
     private fun setupRecyclerView() {
         jobAdapter = JobAdapter(
-            onJobClick = { job ->
+            onJobClicked = { job ->
+                viewModel.selectJob(job)
                 findNavController().navigate(
                     JobListFragmentDirections.actionJobsToJobDetail(job.id)
                 )
             },
-            onBookmarkClick = { job ->
+            onBookmarkClicked = { job ->
                 viewModel.toggleBookmark(job.id)
             }
         )
 
         binding.jobsRecyclerView.adapter = jobAdapter
     }
+    
+    private fun setupScrollListener() {
+        binding.jobsRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val visibleItemCount = layoutManager.childCount
+                val totalItemCount = layoutManager.itemCount
+                val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
+                
+                if (!viewModel.isLoadingMore.value && !viewModel.isLoading.value) {
+                    // Trigger load more when user is within 5 items of the end
+                    if ((visibleItemCount + firstVisibleItemPosition + 5) >= totalItemCount
+                        && firstVisibleItemPosition >= 0
+                        && totalItemCount >= 10
+                        && viewModel.canLoadMore.value
+                    ) {
+                        Log.d("JobListFragment", "Loading more jobs, current count: $totalItemCount")
+                        viewModel.loadMoreJobs()
+                    }
+                }
+            }
+        })
+    }
 
     private fun setupObservers() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.jobs.collectLatest { jobs ->
-                Log.d("JobListFragment", "Received ${jobs.size} jobs")
-                jobAdapter.submitList(jobs)
-                updateEmptyState(jobs.isEmpty())
-            }
-        }
+            viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.jobs.collectLatest { jobs ->
+                        Log.d("JobListFragment", "Received ${jobs.size} jobs")
+                        jobAdapter.submitList(jobs)
+                        updateEmptyState(jobs.isEmpty())
+                    }
+                }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.isLoading.collectLatest { isLoading ->
-                Log.d("JobListFragment", "Loading state: $isLoading")
-                binding.progressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
-            }
-        }
+                launch {
+                    viewModel.isLoading.collectLatest { isLoading ->
+                        binding.progressIndicator.visibility = if (isLoading) View.VISIBLE else View.GONE
+                        if (isLoading) {
+                            binding.emptyStateLayout.visibility = View.GONE
+                            binding.errorTextView.visibility = View.GONE
+                        }
+                    }
+                }
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.error.collectLatest { error ->
-                error?.let {
-                    Log.e("JobListFragment", "Error: $it")
-                    binding.errorTextView.text = it
-                    binding.errorTextView.visibility = View.VISIBLE
-                } ?: run {
-                    binding.errorTextView.visibility = View.GONE
+                launch {
+                    viewModel.isLoadingMore.collectLatest { isLoadingMore ->
+                        binding.loadingMoreIndicator.visibility = if (isLoadingMore) View.VISIBLE else View.GONE
+                        Log.d("JobListFragment", "Loading more: $isLoadingMore")
+                    }
+                }
+
+                launch {
+                    viewModel.error.collectLatest { errorMessage ->
+                        if (errorMessage.isNotBlank()) {
+                            binding.errorTextView.text = errorMessage
+                            binding.errorTextView.visibility = View.VISIBLE
+                            binding.progressIndicator.visibility = View.GONE
+                        } else {
+                            binding.errorTextView.visibility = View.GONE
+                        }
+                    }
                 }
             }
         }
@@ -93,9 +139,13 @@ class JobListFragment : Fragment() {
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
-        Log.d("JobListFragment", "Empty state: $isEmpty")
-        binding.emptyStateLayout.visibility = if (isEmpty) View.VISIBLE else View.GONE
-        binding.jobsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
+        if (isEmpty && !viewModel.isLoading.value) {
+            binding.emptyStateLayout.visibility = View.VISIBLE
+            binding.jobsRecyclerView.visibility = View.GONE
+        } else {
+            binding.emptyStateLayout.visibility = View.GONE
+            binding.jobsRecyclerView.visibility = View.VISIBLE
+        }
     }
 
     override fun onDestroyView() {

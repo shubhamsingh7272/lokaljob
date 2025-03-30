@@ -19,67 +19,53 @@ class JobRepository @Inject constructor(
 ) {
     // In-memory cache of API jobs to preserve transient fields
     private val jobsCache = mutableMapOf<Int, Job>()
+    
+    // Current page for pagination
+    private var currentPage = 1
+    
+    // Total number of pages to fetch (can be adjusted based on API response)
+    private val pagesToFetch = 3
 
     fun getAllJobs(): Flow<List<Job>> = flow {
         try {
-            val response = jobApi.getJobs(page = 1)
-            Log.d("JobRepository", "API Response: ${response.results.size} jobs received")
+            val allJobs = mutableListOf<Job>()
             
-            // Log the raw JSON for the first job
-            if (response.results.isNotEmpty()) {
-                val firstJob = response.results[0]
-                val rawJson = Gson().toJson(firstJob)
-                Log.d("JobRepository", "First job raw JSON: $rawJson")
+            // Fetch multiple pages
+            for (page in 1..pagesToFetch) {
+                Log.d("JobRepository", "Fetching page $page of $pagesToFetch")
+                val response = jobApi.getJobs(page = page)
                 
-                // Check specific fields
-                Log.d("JobRepository", "jobTags raw: ${rawJson.contains("job_tags")}")
-                Log.d("JobRepository", "contactPreference raw: ${rawJson.contains("contact_preference")}")
-                Log.d("JobRepository", "creatives raw: ${rawJson.contains("creatives")}")
-                Log.d("JobRepository", "contentV3 raw: ${rawJson.contains("contentV3")}")
+                if (response.results.isEmpty()) {
+                    Log.d("JobRepository", "No more results on page $page, stopping pagination")
+                    break
+                }
+                
+                allJobs.addAll(response.results)
+                Log.d("JobRepository", "Page $page: ${response.results.size} jobs received. Total so far: ${allJobs.size}")
+                
+                // If this is the first page, log some debug info about the first job
+                if (page == 1 && response.results.isNotEmpty()) {
+                    val firstJob = response.results[0]
+                    val rawJson = Gson().toJson(firstJob)
+                    Log.d("JobRepository", "First job raw JSON: ${rawJson.take(500)}...")
+                    
+                    // Check specific fields
+                    Log.d("JobRepository", "jobTags raw: ${rawJson.contains("job_tags")}")
+                    Log.d("JobRepository", "contactPreference raw: ${rawJson.contains("contact_preference")}")
+                    Log.d("JobRepository", "creatives raw: ${rawJson.contains("creatives")}")
+                    Log.d("JobRepository", "contentV3 raw: ${rawJson.contains("contentV3")}")
+                }
             }
             
+            Log.d("JobRepository", "Total jobs fetched from all pages: ${allJobs.size}")
+            
             // Store all jobs in the cache for later use in getJobById
-            response.results.forEach { job ->
+            allJobs.forEach { job ->
                 jobsCache[job.id] = job
             }
             
-            // Log each job's data for debugging
-            response.results.forEachIndexed { index, job ->
-                Log.d("JobRepository", "Job $index: id=${job.id}, title=${job.title}, company=${job.company}")
-                
-                // Log transient fields
-                Log.d("JobRepository", "Job $index transient fields:")
-                Log.d("JobRepository", "- jobTags: ${job.jobTags?.size ?: 0} tags")
-                if (job.jobTags?.isNotEmpty() == true) {
-                    job.jobTags?.take(2)?.forEach { tag ->
-                        // Use safe access with fallback empty strings
-                        val tagTitle = tag.title.takeIf { it.isNotBlank() } ?: tag.value
-                        Log.d("JobRepository", "  - Tag: ${tagTitle}, color: ${tag.color.ifBlank { tag.bgColor ?: "none" }}")
-                    }
-                }
-                
-                Log.d("JobRepository", "- contactPreference: ${job.contactPreference != null}")
-                job.contactPreference?.let { cp ->
-                    Log.d("JobRepository", "  - WhatsApp: ${cp.whatsapp}")
-                }
-                
-                Log.d("JobRepository", "- creatives: ${job.creatives?.size ?: 0} items")
-                if (job.creatives?.isNotEmpty() == true) {
-                    job.creatives?.firstOrNull()?.let { creative ->
-                        // Use file as fallback if url is empty
-                        val imageUrl = creative.url.takeIf { it.isNotBlank() } ?: creative.file
-                        Log.d("JobRepository", "  - First creative URL: $imageUrl")
-                    }
-                }
-                
-                Log.d("JobRepository", "- contentV3: ${job.contentV3 != null}")
-                if (job.contentV3 != null && job.contentV3?.items?.isNotEmpty() == true) {
-                    Log.d("JobRepository", "  - ContentV3 items: ${job.contentV3?.items?.size ?: 0}")
-                }
-            }
-            
             // Filter out invalid jobs
-            val validJobs = response.results.filter { job ->
+            val validJobs = allJobs.filter { job ->
                 job.id != 0 && // Filter out jobs with id=0
                 job.title != null && // Filter out jobs with null title
                 job.company != null && // Filter out jobs with null company
@@ -99,7 +85,7 @@ class JobRepository @Inject constructor(
             dbJobs.map { jobs ->
                 jobs.map { dbJob ->
                     // Find the matching job from API response to get transient fields
-                    val apiJob = response.results.find { it.id == dbJob.id }
+                    val apiJob = jobsCache[dbJob.id]
                     
                     // Copy transient fields if available
                     if (apiJob != null) {
@@ -118,6 +104,47 @@ class JobRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("JobRepository", "Error fetching jobs", e)
             emitAll(jobDao.getAllJobs())
+        }
+    }
+    
+    // Load more jobs (can be called from UI when user scrolls to bottom)
+    fun loadMoreJobs(): Flow<List<Job>> = flow {
+        try {
+            currentPage++
+            Log.d("JobRepository", "Loading more jobs, page: $currentPage")
+            
+            val response = jobApi.getJobs(page = currentPage)
+            Log.d("JobRepository", "API Response for page $currentPage: ${response.results.size} jobs received")
+            
+            if (response.results.isEmpty()) {
+                Log.d("JobRepository", "No more results on page $currentPage")
+                emit(emptyList())
+                return@flow
+            }
+            
+            // Store all jobs in the cache for later use in getJobById
+            response.results.forEach { job ->
+                jobsCache[job.id] = job
+            }
+            
+            // Filter out invalid jobs
+            val validJobs = response.results.filter { job ->
+                job.id != 0 && // Filter out jobs with id=0
+                job.title != null && // Filter out jobs with null title
+                job.company != null && // Filter out jobs with null company
+                job.primaryDetails != null && // Filter out jobs with null primaryDetails
+                job.title.isNotBlank() && // Filter out jobs with blank title
+                job.company.isNotBlank() // Filter out jobs with blank company
+            }
+            
+            Log.d("JobRepository", "Valid jobs to insert from page $currentPage: ${validJobs.size}")
+            jobDao.insertJobs(validJobs)
+            
+            // Return the new jobs to be displayed
+            emit(validJobs)
+        } catch (e: Exception) {
+            Log.e("JobRepository", "Error fetching more jobs", e)
+            emit(emptyList())
         }
     }
 

@@ -36,9 +36,39 @@
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
                 android:padding="8dp"
+                android:paddingBottom="48dp"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 tools:itemCount="5"
                 tools:listitem="@layout/item_job" />
+
+            <!-- Loading more indicator at the bottom -->
+            <LinearLayout
+                android:id="@+id/loadingMoreIndicator"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom"
+                android:gravity="center"
+                android:background="#FFFFFF"
+                android:orientation="horizontal"
+                android:elevation="4dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:indeterminate="true"
+                    app:indicatorColor="@color/design_default_color_primary"
+                    app:indicatorSize="24dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Loading more jobs..."
+                    android:textColor="#757575"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/emptyStateLayout"

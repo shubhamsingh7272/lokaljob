@@ -32,9 +32,15 @@ class JobViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    
+    private val _isLoadingMore = MutableStateFlow(false)
+    val isLoadingMore: StateFlow<Boolean> = _isLoadingMore.asStateFlow()
+    
+    private val _canLoadMore = MutableStateFlow(true)
+    val canLoadMore: StateFlow<Boolean> = _canLoadMore.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow("")
+    val error: StateFlow<String> = _error.asStateFlow()
 
     init {
         loadJobs()
@@ -45,6 +51,9 @@ class JobViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
+                _error.value = ""
+                _canLoadMore.value = true // Reset pagination state
+                
                 repository.getAllJobs().collect { jobList ->
                     Log.d("JobViewModel", "Received ${jobList.size} jobs")
                     _jobs.value = jobList
@@ -52,8 +61,40 @@ class JobViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 Log.e("JobViewModel", "Error loading jobs", e)
-                _error.value = e.message
+                _error.value = e.message ?: "Unknown error occurred"
                 _isLoading.value = false
+            }
+        }
+    }
+    
+    fun loadMoreJobs() {
+        if (_isLoadingMore.value || !_canLoadMore.value) {
+            return // Already loading or no more data
+        }
+        
+        viewModelScope.launch {
+            try {
+                _isLoadingMore.value = true
+                Log.d("JobViewModel", "Loading more jobs")
+                
+                repository.loadMoreJobs().collect { newJobs ->
+                    Log.d("JobViewModel", "Received ${newJobs.size} more jobs")
+                    
+                    if (newJobs.isEmpty()) {
+                        // No more jobs to load
+                        _canLoadMore.value = false
+                    } else {
+                        // Append new jobs to existing list
+                        val currentJobs = _jobs.value
+                        _jobs.value = currentJobs + newJobs
+                    }
+                    
+                    _isLoadingMore.value = false
+                }
+            } catch (e: Exception) {
+                Log.e("JobViewModel", "Error loading more jobs", e)
+                _error.value = e.message ?: "Unknown error occurred"
+                _isLoadingMore.value = false
             }
         }
     }
@@ -63,7 +104,7 @@ class JobViewModel @Inject constructor(
             repository.getBookmarkedJobs()
                 .catch { e ->
                     Log.e("JobViewModel", "Error loading bookmarked jobs", e)
-                    _error.value = e.message
+                    _error.value = e.message ?: "Unknown error occurred"
                 }
                 .collect { jobs ->
                     Log.d("JobViewModel", "Received ${jobs.size} bookmarked jobs")
@@ -72,28 +113,20 @@ class JobViewModel @Inject constructor(
         }
     }
 
-    fun loadJobDetails(jobId: Int) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val job = _jobs.value.find { it.id == jobId } ?: _bookmarkedJobs.value.find { it.id == jobId }
-                _selectedJob.value = job
-            } catch (e: Exception) {
-                Log.e("JobViewModel", "Error loading job details", e)
-                _error.value = e.message
-            } finally {
-                _isLoading.value = false
-            }
-        }
+    fun selectJob(job: Job) {
+        _selectedJob.value = job
     }
 
     fun toggleBookmark(jobId: Int) {
         viewModelScope.launch {
             try {
                 repository.toggleBookmark(jobId)
+                // Refresh job lists to reflect updated bookmark status
+                loadJobs()
+                loadBookmarkedJobs()
             } catch (e: Exception) {
                 Log.e("JobViewModel", "Error toggling bookmark", e)
-                _error.value = e.message
+                _error.value = e.message ?: "Unknown error occurred"
             }
         }
     }

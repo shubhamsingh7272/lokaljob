@@ -42,12 +42,12 @@ class BookmarksFragment : Fragment() {
 
     private fun setupRecyclerView() {
         jobAdapter = JobAdapter(
-            onJobClick = { job ->
+            onJobClicked = { job ->
                 findNavController().navigate(
                     BookmarksFragmentDirections.actionBookmarksToJobDetail(job.id)
                 )
             },
-            onBookmarkClick = { job ->
+            onBookmarkClicked = { job ->
                 viewModel.toggleBookmark(job.id)
             }
         )
@@ -70,11 +70,11 @@ class BookmarksFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.error.collectLatest { error ->
-                error?.let {
-                    binding.errorTextView.text = it
+            viewModel.error.collectLatest { errorMessage ->
+                if (errorMessage.isNotBlank()) {
+                    binding.errorTextView.text = errorMessage
                     binding.errorTextView.visibility = View.VISIBLE
-                } ?: run {
+                } else {
                     binding.errorTextView.visibility = View.GONE
                 }
             }
@@ -89,8 +89,8 @@ class BookmarksFragment : Fragment() {
     }
 
     private fun updateEmptyState(isEmpty: Boolean) {
-        binding.emptyTextView.text = "No bookmarked jobs"
-        binding.emptyTextView.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.emptyStateLayout.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.jobsRecyclerView.visibility = if (isEmpty) View.GONE else View.VISIBLE
     }
 
     override fun onDestroyView() {
