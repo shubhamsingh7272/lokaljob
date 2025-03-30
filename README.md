@@ -6,7 +6,7 @@ LokalJob is a native Android application that connects job seekers with local em
 ## Video Demonstration
 Click the image below to watch a demo of the LokalJob application:
 
-[![LokalJob Demo](https://img.youtube.com/vi/DEMO_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=DEMO_VIDEO_ID "LokalJob Demo")
+[![LokalJob Demo]](https://drive.google.com/drive/folders/1tMUzw9q4WMVDMoN9HF93ywsyufI3KKWP "LokalJob Demo")
 
 *Note: Replace DEMO_VIDEO_ID with your actual YouTube video ID when you upload your demo video.*
 
