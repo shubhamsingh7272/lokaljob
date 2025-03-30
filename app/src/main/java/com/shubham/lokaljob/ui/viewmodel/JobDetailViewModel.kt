@@ -1,5 +1,6 @@
 package com.shubham.lokaljob.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,6 +31,7 @@ class JobDetailViewModel @Inject constructor(
     val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
+        Log.d("JobDetailViewModel", "Initializing with jobId: $jobId")
         loadJobDetails()
     }
 
@@ -37,10 +39,26 @@ class JobDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                _job.value = repository.getJobById(jobId)
+                Log.d("JobDetailViewModel", "Loading job details for jobId: $jobId")
+                
+                val loadedJob = repository.getJobById(jobId)
+                
+                if (loadedJob != null) {
+                    Log.d("JobDetailViewModel", "Successfully loaded job: id=${loadedJob.id}, title=${loadedJob.title}")
+                    Log.d("JobDetailViewModel", "Job has jobTags: ${loadedJob.jobTags?.size ?: 0}")
+                    Log.d("JobDetailViewModel", "Job has contactPreference: ${loadedJob.contactPreference != null}")
+                    Log.d("JobDetailViewModel", "Job has creatives: ${loadedJob.creatives?.size ?: 0}")
+                    Log.d("JobDetailViewModel", "Job has contentV3: ${loadedJob.contentV3?.items?.size ?: 0}")
+                    _job.value = loadedJob
+                } else {
+                    Log.e("JobDetailViewModel", "Job not found with id: $jobId")
+                    _error.value = "Job not found with id: $jobId"
+                }
+                
                 _isLoading.value = false
             } catch (e: Exception) {
-                _error.value = e.message
+                Log.e("JobDetailViewModel", "Error loading job details", e)
+                _error.value = e.message ?: "Unknown error occurred"
                 _isLoading.value = false
             }
         }
@@ -49,11 +67,13 @@ class JobDetailViewModel @Inject constructor(
     fun toggleBookmark() {
         viewModelScope.launch {
             try {
+                Log.d("JobDetailViewModel", "Toggling bookmark for jobId: $jobId")
                 repository.toggleBookmark(jobId)
                 // Reload job details to get updated bookmark status
                 loadJobDetails()
             } catch (e: Exception) {
-                _error.value = e.message
+                Log.e("JobDetailViewModel", "Error toggling bookmark", e)
+                _error.value = e.message ?: "Error toggling bookmark"
             }
         }
     }

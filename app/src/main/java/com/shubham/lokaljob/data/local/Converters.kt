@@ -20,4 +20,8 @@ class Converters {
             gson.fromJson(it, type)
         }
     }
+    
+    // Note: For types marked with @Ignore in the Entity class,
+    // we don't need to create converters as Room will ignore them
+    // during database operations. They're only used for JSON deserialization.
 } 

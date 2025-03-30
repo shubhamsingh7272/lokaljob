@@ -31,10 +31,31 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Job Image -->
             <androidx.cardview.widget.CardView
+                android:id="@+id/imageCardView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/jobImageView"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:scaleType="centerCrop"
+                    tools:src="@drawable/ic_search" />
+            </androidx.cardview.widget.CardView>
+
+            <!-- Job Details -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -61,6 +82,15 @@
                         android:textColor="#666666"
                         android:textSize="18sp"
                         tools:text="Google" />
+
+                    <!-- Job Tags -->
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/tagsChipGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                     <View
                         android:layout_width="match_parent"
@@ -108,9 +138,54 @@
                         app:drawableStartCompat="@drawable/ic_phone"
                         app:drawableTint="#757575"
                         tools:text="+1 234 567 8900" />
+
+                    <TextView
+                        android:id="@+id/openingsTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="6dp"
+                        android:textColor="#666666"
+                        android:textSize="16sp"
+                        android:visibility="gone"
+                        app:drawableStartCompat="@drawable/ic_people"
+                        app:drawableTint="#757575"
+                        tools:text="40 Openings"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/applicationsTextView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:drawablePadding="8dp"
+                        android:gravity="center_vertical"
+                        android:paddingVertical="6dp"
+                        android:textColor="#666666"
+                        android:textSize="16sp"
+                        android:visibility="gone"
+                        app:drawableStartCompat="@drawable/ic_applications"
+                        app:drawableTint="#757575"
+                        tools:text="194 Applications"
+                        tools:visibility="visible" />
+
+                    <!-- Button to contact via WhatsApp -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/whatsappButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:backgroundTint="#25D366"
+                        android:text="Contact via WhatsApp"
+                        android:textColor="@android:color/white"
+                        android:visibility="gone"
+                        app:icon="@drawable/ic_whatsapp"
+                        app:iconTint="@android:color/white"
+                        tools:visibility="visible" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Description -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -144,11 +219,12 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- Requirements -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
-                android:layout_marginBottom="80dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp">
 
@@ -174,6 +250,41 @@
                         android:textColor="#666666"
                         android:textSize="16sp"
                         tools:text="• 3+ years of experience\n• Strong knowledge of Kotlin\n• Experience with Android development" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Additional Details -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/additionalDetailsCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginBottom="80dp"
+                android:visibility="gone"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Additional Details"
+                        android:textColor="#333333"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/additionalDetailsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
         </LinearLayout>
