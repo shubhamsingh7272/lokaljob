@@ -4,11 +4,11 @@
 LokalJob is a native Android application that connects job seekers with local employment opportunities. The app displays job listings fetched from an API, allows users to view detailed job information, bookmark favorite positions, and contact employers directly through WhatsApp.
 
 ## Video Demonstration
-Click the image below to watch a demo of the LokalJob application:
+Click the link below to watch a demo of the LokalJob application:
 
 [[LokalJob Demo]](https://drive.google.com/drive/folders/1tMUzw9q4WMVDMoN9HF93ywsyufI3KKWP "LokalJob Demo")
 
-*Note: Replace DEMO_VIDEO_ID with your actual YouTube video ID when you upload your demo video.*
+
 
 ## Features
 - **Job Listings**: Browse through available job opportunities with essential information like title, company, salary, and location
